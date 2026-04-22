@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FeudBox – Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #f5c518; --gold-dark: #c49b10;
+    --bg: #0e0800; --surface: #1e1200; --surface2: #2a1a00;
+    --red: #c0392b; --green: #27ae60; --blue: #1a6faf;
+    --text: #f0e6cc; --muted: #8a7a5a; --border: #3a2800;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Source Sans 3', sans-serif; font-size: 14px; min-height: 100vh; }
+  h1, h2, h3, .label-title { font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
+  header { background: var(--surface); border-bottom: 2px solid var(--gold); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 22px; color: var(--gold); text-transform: uppercase; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .live-label { font-size: 12px; color: var(--green); font-weight: 600; }
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 0; height: calc(100vh - 54px); overflow: hidden; }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .panel { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .panel-title { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .team-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .team-name-inp { background: transparent; border: none; border-bottom: 1px solid var(--muted); color: var(--gold); font-family: 'Oswald', sans-serif; font-size: 16px; text-align: center; width: 100%; outline: none; padding: 2px 0; }
+  .team-score-display { font-family: 'Oswald', sans-serif; font-size: 38px; color: #fff700; line-height: 1.1; margin: 6px 0 2px; }
+  .team-btns { display: flex; gap: 4px; margin-top: 8px; justify-content: center; flex-wrap: wrap; }
+  .round-pts-display { text-align: center; margin-bottom: 10px; }
+  .round-pts-num { font-family: 'Oswald', sans-serif; font-size: 48px; color: #fff700; line-height: 1; }
+  .round-pts-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .mult-row { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+  .strikes-row { display: flex; justify-content: center; gap: 14px; margin-bottom: 8px; }
+  .strike { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--red); display: flex; align-items: center; justify-content: center; font-family: 'Oswald', sans-serif; font-size: 22px; color: var(--red); transition: all 0.25s; }
+  .strike.active { background: var(--red); color: #fff; box-shadow: 0 0 12px #c0392b99; }
+  .strike-btns { display: flex; gap: 8px; justify-content: center; }
+  .main-area { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .msg-bar { padding: 10px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; text-align: center; }
+  .msg-info { background: #0e2a45; color: #7ec8ff; border: 1px solid #1a5a8a; }
+  .msg-success { background: #0a3a1a; color: #4ddb7a; border: 1px solid #1a6a30; }
+  .msg-error { background: #3a0a0a; color: #ff6b6b; border: 1px solid #7a1010; }
+  .msg-warn { background: #3a2a00; color: var(--gold); border: 1px solid #6a4a00; }
+  .q-input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 10px; font-size: 14px; outline: none; font-family: 'Source Sans 3', sans-serif; }
+  .q-input:focus { border-color: var(--gold); }
+  .answers-setup { display: flex; flex-direction: column; gap: 6px; }
+  .ans-row { display: grid; grid-template-columns: 1fr 70px 36px; gap: 6px; align-items: center; }
+  .ans-row input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 8px; font-size: 13px; outline: none; width: 100%; }
+  .ans-row input:focus { border-color: var(--gold); }
+  .ans-idx { font-family: 'Oswald', sans-serif; color: var(--muted); font-size: 14px; text-align: center; }
+  .answers-board { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ans-tile { background: #001a44; border: 2px solid #1a4a8a; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; min-height: 50px; display: flex; align-items: center; justify-content: space-between; }
+  .ans-tile:hover { border-color: #4a9aff; }
+  .ans-tile.revealed { background: #0a3a18; border-color: #2ecc71; }
+  .tile-num { font-family: 'Oswald', sans-serif; font-size: 18px; color: #4a9aff; min-width: 22px; }
+  .tile-text { flex: 1; font-size: 13px; font-weight: 600; color: #fff; padding: 0 8px; }
+  .tile-pts { font-family: 'Oswald', sans-serif; font-size: 16px; color: #fff700; min-width: 30px; text-align: right; }
+  .tile-hidden { font-family: 'Oswald', sans-serif; font-size: 26px; color: #2a5a9a; text-align: center; flex: 1; }
+  .btn { padding: 7px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; border: none; font-family: 'Source Sans 3', sans-serif; font-weight: 600; transition: all 0.15s; }
+  .btn:active { transform: scale(0.95); }
+  .btn-gold { background: var(--gold); color: #1a0800; } .btn-gold:hover { background: var(--gold-dark); }
+  .btn-red { background: var(--red); color: #fff; } .btn-red:hover { background: #a93226; }
+  .btn-green { background: var(--green); color: #fff; } .btn-green:hover { background: #1e8449; }
+  .btn-blue { background: var(--blue); color: #fff; } .btn-blue:hover { background: #155a8a; }
+  .btn-gray { background: #333; color: #ccc; } .btn-gray:hover { background: #444; }
+  .btn-sm { padding: 5px 8px; font-size: 11px; }
+  .btn-full { width: 100%; padding: 10px; font-size: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .small-muted { font-size: 11px; color: var(--muted); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎮 Control Panel — <span id="event-name-header" style="color:#fff;font-size:16px;">Loading...</span></h1>
+  <div>
+    <span class="status-dot"></span>
+    <span class="live-label">LIVE – Board syncs via Supabase</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-title">Teams</div>
+      <div class="team-grid">
+        <div class="team-box" id="t1box">
+          <div class="small-muted">Team 1</div>
+          <input class="team-name-inp" id="t1name" value="" maxlength="14" oninput="syncTeamName()" />
+          <div class="team-score-display" id="t1score">0</div>
+          <div class="small-muted">points</div>
+          <div class="team-btns">
+            <button class="btn btn-green btn-sm" onclick="claimRound(1)">Claim Round</button>
+          </div>
+          <div class="team-btns" style="margin-top:4px;">
+            <button class="btn btn-gray btn-sm" onclick="adj(1,-50)">−50</button>
+            <button class="btn btn-gray btn-sm" onclick="adj(1,50)">+50</button>
+            <button class="btn btn-gray btn-sm" onclick="adj(1,100)">+100</button>
+          </div>
+        </div>
+        <div class="team-box" id="t2box">
+          <div class="small-muted">Team 2</div>
+          <input class="team-name-inp" id="t2name" value="" maxlength="14" oninput="syncTeamName()" />
+          <div class="team-score-display" id="t2score">0</div>
+          <div class="small-muted">points</div>
+          <div class="team-btns">
+            <button class="btn btn-green btn-sm" onclick="claimRound(2)">Claim Round</button>
+          </div>
+          <div class="team-btns" style="margin-top:4px;">
+            <button class="btn btn-gray btn-sm" onclick="adj(2,-50)">−50</button>
+            <button class="btn btn-gray btn-sm" onclick="adj(2,50)">+50</button>
+            <button class="btn btn-gray btn-sm" onclick="adj(2,100)">+100</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Round Points</div>
+      <div class="round-pts-display">
+        <div class="round-pts-num" id="rpts">0</div>
+        <div class="round-pts-label">accumulated this round</div>
+      </div>
+      <div class="mult-row">
+        <button class="btn btn-gray btn-sm" id="mx1" onclick="setMult(1)">× 1</button>
+        <button class="btn btn-gold btn-sm" id="mx2" onclick="setMult(2)">× 2</button>
+        <button class="btn btn-gray btn-sm" id="mx3" onclick="setMult(3)">× 3</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Strikes</div>
+      <div class="strikes-row">
+        <div class="strike" id="s1">✕</div>
+        <div class="strike" id="s2">✕</div>
+        <div class="strike" id="s3">✕</div>
+      </div>
+      <div class="strike-btns">
+        <button class="btn btn-red" onclick="addStrike()">Strike!</button>
+        <button class="btn btn-gray" onclick="clearStrikes()">Clear</button>
+      </div>
+    </div>
+
+    <audio id="strike-sound" src="assets/wrong answer sound.wav" preload="auto"></audio>
+    <audio id="bg-music" src="assets/background_theme.wav" preload="auto"></audio>
+    <audio id="win-music" src="assets/victory_fanfare.wav" preload="auto"></audio>
+    <audio id="introA-music" src="assets/intro_team1.wav" preload="auto"></audio>
+    <audio id="introB-music" src="assets/intro_team2.wav" preload="auto"></audio>
+    <audio id="heart-music" src="assets/heartbeat.wav" preload="auto" loop></audio>
+    <audio id="end-music" src="assets/ending_theme.wav" preload="auto"></audio>
+
+    <div class="panel">
+      <div class="panel-title">Music Gallery</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button class="btn btn-blue" onclick="playMusic('introA')">Intro: Team 1</button>
+        <button class="btn btn-blue" onclick="playMusic('introB')">Intro: Team 2</button>
+        <button class="btn btn-blue" onclick="playMusic('bg')">Main Theme</button>
+        <button class="btn btn-blue" onclick="playMusic('heart')">Heartbeat</button>
+        <button class="btn btn-blue" onclick="playMusic('win')">Victory</button>
+        <button class="btn btn-blue" onclick="playMusic('end')">Ending</button>
+      </div>
+      <button class="btn btn-gray" style="width:100%;margin-top:10px;" onclick="stopAllMusic()">Stop Music (Fade Out)</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Actions</div>
+      <div class="grid2" style="gap:8px;">
+        <button class="btn btn-blue btn-full" onclick="revealAll()">Reveal All</button>
+        <button class="btn btn-gold btn-full" onclick="resetRound()">Reset Round</button>
+        <button class="btn btn-gray btn-full" onclick="resetScores()">Reset Scores</button>
+        <button class="btn btn-gray btn-full" onclick="resetAll()">Full Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div id="msgbar" class="msg-bar msg-info">Load a round using the setup below.</div>
+
+    <div class="panel">
+      <div class="panel-title">Answer Board — click to reveal</div>
+      <div class="answers-board" id="board-tiles">
+        <div style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px;">No round loaded yet.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Round Setup</div>
+      <div style="margin-bottom:10px;">
+        <div class="small-muted" style="margin-bottom:4px;">Survey Question</div>
+        <input class="q-input" id="qtext" placeholder='e.g. "Name a common antibiotic"' />
+      </div>
+      <div class="small-muted" style="margin-bottom:6px;">Answers (up to 7)</div>
+      <div class="answers-setup" id="ans-setup"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-gold btn-full" onclick="loadRound()">▶ Load This Round</button>
+        <button class="btn btn-gray btn-sm" onclick="loadSample()" style="white-space:nowrap;padding:10px 12px;">Sample</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase-client.js'
+
+const params = new URLSearchParams(location.search)
+const slug = params.get('slug')
+if (!slug) { alert('No event slug in URL. Go back to dashboard.'); }
+
+let state = {}
+let sessionId = null
+let saveTimer = null
+
+async function init() {
+  // Auth check
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = 'login.html'; return }
+
+  // Load event
+  const { data: ev } = await supabase.from('events').select('*').eq('slug', slug).single()
+  if (!ev) { alert('Event not found.'); return }
+  document.getElementById('event-name-header').textContent = ev.name
+
+  // Load game session
+  const { data: gs } = await supabase.from('game_sessions').select('*').eq('event_id', ev.id).single()
+  if (!gs) { alert('Game session not found.'); return }
+
+  sessionId = gs.id
+  state = gs.state
+
+  // Set team names from state
+  document.getElementById('t1name').value = state.team1?.name || ev.team1_name
+  document.getElementById('t2name').value = state.team2?.name || ev.team2_name
+
+  buildSetupRows()
+  renderUI()
+}
+
+function debounce(fn, ms) {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(fn, ms)
+}
+
+async function pushState() {
+  renderUI()
+  debounce(async () => {
+    await supabase.from('game_sessions').update({ state }).eq('id', sessionId)
+  }, 100)
+}
+
+function renderUI() {
+  document.getElementById('t1score').textContent = state.team1?.score ?? 0
+  document.getElementById('t2score').textContent = state.team2?.score ?? 0
+  document.getElementById('t1name').value = state.team1?.name ?? ''
+  document.getElementById('t2name').value = state.team2?.name ?? ''
+  document.getElementById('rpts').textContent = state.roundPts ?? 0
+
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('s'+i).classList.toggle('active', i <= (state.strikes ?? 0))
+  }
+  ;[1,2,3].forEach(n => {
+    document.getElementById('mx'+n).className = 'btn btn-sm ' + (n === state.multiplier ? 'btn-gold' : 'btn-gray')
+  })
+
+  const mb = document.getElementById('msgbar')
+  mb.textContent = state.msg?.text ?? ''
+  mb.className = 'msg-bar msg-' + (state.msg?.type ?? 'info')
+
+  renderTiles()
+}
+
+function renderTiles() {
+  const container = document.getElementById('board-tiles')
+  if (!state.answers || state.answers.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px;">No round loaded yet.</div>'
+    return
+  }
+  container.innerHTML = ''
+  state.answers.forEach((a, i) => {
+    const tile = document.createElement('div')
+    tile.className = 'ans-tile' + (state.revealed[i] ? ' revealed' : '')
+    tile.onclick = () => revealTile(i)
+    if (state.revealed[i]) {
+      tile.innerHTML = `<span class="tile-num">${i+1}</span><span class="tile-text">${a.text}</span><span class="tile-pts">${a.pts}</span>`
+    } else {
+      tile.innerHTML = `<span class="tile-num">${i+1}</span><span class="tile-hidden">${i+1}</span>`
+    }
+    container.appendChild(tile)
+  })
+}
+
+function buildSetupRows() {
+  const c = document.getElementById('ans-setup')
+  c.innerHTML = ''
+  for (let i = 0; i < 7; i++) {
+    const row = document.createElement('div')
+    row.className = 'ans-row'
+    row.innerHTML = `<input id="ai${i}" placeholder="Answer ${i+1}" /><input id="ap${i}" placeholder="pts" type="number" min="1" max="999" /><span class="ans-idx">${i+1}</span>`
+    c.appendChild(row)
+  }
+}
+
+// --- GAME ACTIONS ---
+
+window.syncTeamName = () => {
+  state.team1.name = document.getElementById('t1name').value
+  state.team2.name = document.getElementById('t2name').value
+  pushState()
+}
+
+window.revealTile = (i) => {
+  if (state.revealed[i]) { showMsg('Already revealed!', 'warn'); return }
+  stopAllMusic()
+  state.revealed[i] = true
+  state.roundPts += state.answers[i].pts * state.multiplier
+  const allDone = state.revealed.every(Boolean)
+  state.msg = allDone
+    ? { text: 'All answers revealed!', type: 'success' }
+    : { text: `Revealed: "${state.answers[i].text}" — +${state.answers[i].pts * state.multiplier} pts`, type: 'success' }
+  state.flash = { type: 'reveal', index: i, time: Date.now() }
+  pushState()
+}
+
+window.revealAll = () => {
+  state.answers.forEach((a, i) => {
+    if (!state.revealed[i]) { state.revealed[i] = true; state.roundPts += a.pts * state.multiplier }
+  })
+  state.msg = { text: 'All answers revealed!', type: 'success' }
+  state.flash = { type: 'reveal_all', time: Date.now() }
+  pushState()
+}
+
+window.addStrike = () => {
+  if (state.strikes >= 3) { showMsg('Already 3 strikes!', 'warn'); return }
+  const sound = document.getElementById('strike-sound')
+  if (sound) { sound.currentTime = 0; sound.play().catch(() => {}) }
+  state.strikes++
+  state.flash = { type: 'strike', count: state.strikes, time: Date.now() }
+  state.msg = state.strikes === 3
+    ? { text: 'THREE STRIKES! Other team can steal!', type: 'error' }
+    : { text: `Strike ${state.strikes}!`, type: 'error' }
+  pushState()
+}
+
+window.clearStrikes = () => {
+  state.strikes = 0
+  state.msg = { text: 'Strikes cleared.', type: 'info' }
+  state.flash = null
+  pushState()
+}
+
+window.claimRound = (team) => {
+  if (!state.roundPts) { showMsg('No round points to claim!', 'warn'); return }
+  const name = team === 1 ? state.team1.name : state.team2.name
+  if (team === 1) state.team1.score += state.roundPts
+  else state.team2.score += state.roundPts
+  state.msg = { text: `${name} claimed ${state.roundPts} points!`, type: 'success' }
+  playMusic('win')
+  state.flash = { type: 'score', team, time: Date.now() }
+  state.roundPts = 0
+  pushState()
+}
+
+window.adj = (team, delta) => {
+  if (team === 1) state.team1.score = Math.max(0, state.team1.score + delta)
+  else state.team2.score = Math.max(0, state.team2.score + delta)
+  pushState()
+}
+
+window.setMult = (m) => { state.multiplier = m; pushState() }
+
+window.loadRound = () => {
+  const q = document.getElementById('qtext').value.trim()
+  if (!q) { showMsg('Enter a survey question.', 'error'); return }
+  const answers = []
+  for (let i = 0; i < 7; i++) {
+    const t = (document.getElementById('ai'+i)?.value || '').trim()
+    const p = parseInt(document.getElementById('ap'+i)?.value) || 0
+    if (t && p > 0) answers.push({ text: t, pts: p })
+  }
+  if (!answers.length) { showMsg('Add at least one answer with points.', 'error'); return }
+  state.question = q
+  state.answers = answers
+  state.revealed = new Array(answers.length).fill(false)
+  state.strikes = 0
+  state.roundPts = 0
+  state.msg = { text: 'Round loaded! Click tiles to reveal.', type: 'success' }
+  pushState()
+}
+
+window.loadSample = () => {
+  document.getElementById('qtext').value = 'Name a common antibiotic class'
+  const s = [['Penicillins',45],['Cephalosporins',32],['Macrolides',24],['Fluoroquinolones',18],['Tetracyclines',14],['Aminoglycosides',10],['Carbapenems',7]]
+  s.forEach((x,i) => {
+    const ai = document.getElementById('ai'+i); if (ai) ai.value = x[0]
+    const ap = document.getElementById('ap'+i); if (ap) ap.value = x[1]
+  })
+  window.loadRound()
+}
+
+window.resetRound = () => {
+  state.revealed = new Array(state.answers.length).fill(false)
+  state.strikes = 0; state.roundPts = 0; state.flash = null
+  state.msg = { text: 'Round reset.', type: 'info' }
+  pushState()
+}
+
+window.resetScores = () => {
+  state.team1.score = 0; state.team2.score = 0
+  state.msg = { text: 'Scores reset.', type: 'info' }
+  pushState()
+}
+
+window.resetAll = () => {
+  state.team1.score = 0; state.team2.score = 0
+  state.answers = []; state.revealed = []; state.strikes = 0
+  state.roundPts = 0; state.question = ''; state.multiplier = 1
+  state.flash = null; state.msg = { text: 'Full reset done.', type: 'info' }
+  pushState()
+}
+
+function showMsg(text, type) { state.msg = { text, type }; pushState() }
+
+window.playMusic = (type) => {
+  stopAllMusicLocal()
+  const audio = document.getElementById(type + '-music')
+  if (audio) audio.play().catch(() => {})
+  state.flash = { type: 'play_music', track: type, time: Date.now() }
+  pushState()
+}
+
+window.stopAllMusic = () => {
+  stopAllMusicLocal()
+  state.flash = { type: 'stop_music', time: Date.now() }
+  pushState()
+}
+
+function stopAllMusicLocal() {
+  ['bg','win','introA','introB','heart','end'].forEach(m => {
+    const a = document.getElementById(m+'-music')
+    if (a) { a.pause(); a.currentTime = 0 }
+  })
+}
+
+init()
+</script>
+</body>
+</html>

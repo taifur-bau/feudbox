@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FeudBox — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #f5c518; --gold-dark: #c49b10;
+    --bg: #0e0800; --surface: #1e1200; --surface2: #2a1a00;
+    --red: #c0392b; --green: #27ae60;
+    --text: #f0e6cc; --muted: #8a7a5a; --border: #3a2800;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Source Sans 3', sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 40px; width: 100%; max-width: 400px; }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 32px; color: var(--gold);
+    text-align: center; letter-spacing: 3px; margin-bottom: 8px; }
+  .tagline { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+  .tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-family: 'Oswald', sans-serif;
+    font-size: 14px; letter-spacing: 1px; background: var(--surface2); color: var(--muted); border: none; transition: all 0.2s; }
+  .tab.active { background: var(--gold); color: #1a0800; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; letter-spacing: 1px; text-transform: uppercase; }
+  input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 10px 12px; font-size: 14px; outline: none; font-family: 'Source Sans 3', sans-serif; }
+  input:focus { border-color: var(--gold); }
+  .btn { width: 100%; padding: 12px; background: var(--gold); color: #1a0800; border: none;
+    border-radius: 8px; font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.15s; margin-top: 8px; }
+  .btn:hover { background: var(--gold-dark); }
+  .btn:active { transform: scale(0.98); }
+  .msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 14px; display: none; }
+  .msg.error { background: #3a0a0a; color: #ff6b6b; border: 1px solid #7a1010; display: block; }
+  .msg.success { background: #0a3a1a; color: #4ddb7a; border: 1px solid #1a6a30; display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">FEUDBOX</div>
+  <div class="tagline">Run your own game show. Anywhere.</div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">LOGIN</button>
+    <button class="tab" id="tab-signup" onclick="switchTab('signup')">SIGN UP</button>
+  </div>
+
+  <div id="form-login">
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"/></div>
+    <button class="btn" onclick="doLogin()">LOGIN</button>
+  </div>
+
+  <div id="form-signup" style="display:none">
+    <div class="field"><label>Name</label><input type="text" id="signup-name" placeholder="Your name"/></div>
+    <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="signup-pass" placeholder="min 6 characters"/></div>
+    <button class="btn" onclick="doSignup()">CREATE ACCOUNT</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase-client.js'
+
+window.switchTab = (tab) => {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none'
+  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none'
+  document.getElementById('tab-login').className = 'tab' + (tab === 'login' ? ' active' : '')
+  document.getElementById('tab-signup').className = 'tab' + (tab === 'signup' ? ' active' : '')
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg')
+  el.textContent = text
+  el.className = 'msg ' + type
+}
+
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim()
+  const pass = document.getElementById('login-pass').value
+  if (!email || !pass) { showMsg('Fill in all fields.', 'error'); return }
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pass })
+  if (error) { showMsg(error.message, 'error'); return }
+  window.location.href = 'dashboard.html'
+}
+
+window.doSignup = async () => {
+  const name = document.getElementById('signup-name').value.trim()
+  const email = document.getElementById('signup-email').value.trim()
+  const pass = document.getElementById('signup-pass').value
+  if (!name || !email || !pass) { showMsg('Fill in all fields.', 'error'); return }
+  if (pass.length < 6) { showMsg('Password must be at least 6 characters.', 'error'); return }
+  const { error } = await supabase.auth.signUp({ email, password: pass, options: { data: { name } } })
+  if (error) { showMsg(error.message, 'error'); return }
+  showMsg('Account created! Check your email to confirm.', 'success')
+}
+
+// Already logged in → go to dashboard
+supabase.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.href = 'dashboard.html'
+})
+</script>
+</body>
+</html>

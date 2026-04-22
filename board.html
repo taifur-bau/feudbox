@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FeudBox – Game Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700;900&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --gold: #f5c518; --gold2: #fff700; --board-bg: #33006F; --board-border: #0055ff;
+    --tile-revealed: #006241; --tile-revealed-border: #00cc55; --bg: #0a0500; --red: #d32f2f; }
+  body { background: var(--bg); color: #fff; font-family: 'Oswald', sans-serif;
+    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    background-image: linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)), url('assets/background.png');
+    background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
+  .top { background: rgba(255,255,255,0.5); display: flex; align-items: flex-start;
+    height: 220px; flex-shrink: 0; padding: 10px 16px 0; gap: 16px; }
+  .team-row { display: flex; align-items: stretch; width: 100%; }
+  .team-panel { flex: 1; flex-shrink: 0; background: #150a00; border: 2px solid #3a2200;
+    border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 5px 16px; position: relative; overflow: hidden; min-height: 110px; }
+  .inner-panel-logo { position: absolute; height: 80px; width: auto; top: 50%;
+    transform: translateY(-50%); object-fit: contain; border-radius: 50%; }
+  .logo-left-align { left: 15px; } .logo-right-align { right: 15px; }
+  #t1panel { background: #0000CD; } #t2panel { background: #000000; }
+  .team-panel.flash-score { border-color: var(--gold); box-shadow: 0 0 30px #f5c51866; animation: scoreFlash 1.2s ease-out forwards; }
+  @keyframes scoreFlash { 0%{background:#3a2500} 100%{background:#150a00} }
+  .team-name { font-size: 20px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
+  .team-score { font-size: 48px; font-weight: 900; color: var(--gold2); line-height: 1; }
+  .title-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 0 0 400px; }
+  .show-title { font-size: 36px; font-weight: 900; color: var(--gold); text-transform: uppercase;
+    letter-spacing: 3px; text-align: center; margin-bottom: 10px; }
+  .round-pts-val { font-size: 45px; font-weight: 900; color: #e67e22; line-height: 1;
+    letter-spacing: 3px; text-align: center; background: rgba(100,100,100,0.8);
+    width: 150px; height: 50px; border-radius: 20px; }
+  .round-pts-lbl { font-size: 14px; color: #e2e2e2; letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+  .logo-box { margin-top: 10px; background: rgba(100,100,100,0.8); border: 2px solid #3a2200;
+    border-radius: 12px; display: grid; grid-template-columns: repeat(6,1fr);
+    gap: 5px; padding: 8px; height: 80px; align-items: center; justify-items: center; }
+  .uni-logo { max-width: 50px; max-height: 50px; width: auto; height: auto; object-fit: contain; }
+  .side-logo { height: 61px; width: auto; object-fit: contain; border-radius: 12px; padding: 5px; }
+  .side-logo.left { margin-right: 10px; border-radius: 50%; }
+  .side-logo.mid { margin-left: 10px; border-radius: 0; background: #fff; }
+  .side-logo.right { margin-left: 10px; border-radius: 50%; }
+  .board-wrap { flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; padding: 20px 16px; gap: 20px; min-height: 0; padding-bottom: 120px; }
+  .question-bar { background: var(--board-bg); border: 2px solid var(--board-border);
+    border-radius: 8px; width: 100%; padding: 8px 20px; text-align: center;
+    font-size: 40px; font-weight: 700; color: #fff; min-height: 65px; display: flex; align-items: center; justify-content: center; }
+  .board-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; flex: 1; }
+  .col-left, .col-right { display: flex; flex-direction: column; gap: 20px; }
+  .tile { background: transparent; border: none; position: relative; flex: 0 0 95px; perspective: 1000px; }
+  .tile-inner { position: relative; width: 100%; height: 100%; text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); transform-style: preserve-3d; }
+  .tile.revealed .tile-inner { transform: rotateX(180deg); }
+  .tile-front, .tile-back { position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; border: 2px solid #0044cc; }
+  .tile-front { background: linear-gradient(180deg,#001560 0%,#000a30 100%); color: var(--gold); font-size: 40px; font-weight: 900; }
+  .tile-back { background: #003d15; border-color: #00cc55; color: white; transform: rotateX(180deg); padding: 0 15px; }
+  .tile-number { position: absolute; left: 12px; font-size: 14px; color: rgba(100,180,255,0.7); }
+  .tile-hidden-num { font-size: 28px; font-weight: 900; color: rgba(255,255,255,0.8); }
+  .tile-answer { font-size: 30px; font-weight: 700; color: #fff; flex: 1; text-align: center; padding: 0 45px; }
+  .tile-pts { position: absolute; right: 20px; font-size: 30px; font-weight: 900; color: var(--gold2); }
+  .strikes-box { margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-bottom: 20px; }
+  .strikes-circles { display: flex; gap: 20px; }
+  .s-circle { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--red);
+    display: flex; align-items: center; justify-content: center; font-size: 60px;
+    font-weight: 900; color: var(--red); background: transparent; }
+  .s-circle.active { background: var(--red); color: #fff; box-shadow: 0 0 30px #d32f2fcc; }
+  .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 100; opacity: 0; background: rgba(0,0,0,0.4); }
+  .overlay.show { animation: overlayShow 1.2s ease-out forwards; }
+  @keyframes overlayShow { 0%{opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+  .overlay-x { font-size: 280px; font-weight: 900; color: var(--red); text-shadow: 0 0 60px #000; }
+  .donor-footer { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.5);
+    border-top: 2px solid var(--gold); display: flex; justify-content: center;
+    align-items: center; gap: 30px; padding: 10px; z-index: 50; }
+  .donor-logo { width: auto; height: 90px; object-fit: contain; background: white; border-radius: 8px; padding: 5px; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"><div id="overlay-content">✕</div></div>
+
+<div class="top">
+  <div style="flex:1;display:flex;flex-direction:column;">
+    <div class="team-row">
+      <div class="team-panel" id="t1panel">
+        <img id="t1logo" src="assets/team1-logo.png" class="inner-panel-logo logo-left-align" onerror="this.style.display='none'">
+        <div class="team-name" id="disp-t1name">Team 1</div>
+        <div class="team-score" id="disp-t1score">0</div>
+      </div>
+    </div>
+    <div class="logo-box" id="t1-logos"></div>
+  </div>
+
+  <div class="title-center">
+    <div id="center-logos"></div>
+    <div class="show-title" id="show-title">FEUDBOX</div>
+    <div class="round-pts-wrap">
+      <div class="round-pts-val" id="disp-rpts">0</div>
+      <div class="round-pts-lbl">Round Points</div>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;">
+    <div class="team-row">
+      <div class="team-panel" id="t2panel">
+        <div class="team-name" id="disp-t2name">Team 2</div>
+        <div class="team-score" id="disp-t2score">0</div>
+        <img id="t2logo" src="assets/team2-logo.png" class="inner-panel-logo logo-right-align" onerror="this.style.display='none'">
+      </div>
+    </div>
+    <div class="logo-box" id="t2-logos"></div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="question-bar" id="disp-question">Waiting...</div>
+  <div class="board-columns">
+    <div class="col-left" id="col-left"></div>
+    <div class="col-right" id="col-right"></div>
+  </div>
+</div>
+
+<div class="donor-footer" id="donor-footer"></div>
+
+<audio id="chime-sound" src="assets/chime.wav" preload="auto"></audio>
+<audio id="strike-sound" src="assets/wrong answer sound.wav" preload="auto"></audio>
+<audio id="bg-music" src="assets/background_theme.wav" preload="auto"></audio>
+<audio id="win-music" src="assets/victory_fanfare.wav" preload="auto"></audio>
+<audio id="introA-music" src="assets/intro_team1.wav" preload="auto"></audio>
+<audio id="introB-music" src="assets/intro_team2.wav" preload="auto"></audio>
+<audio id="heart-music" src="assets/heartbeat.wav" preload="auto" loop></audio>
+<audio id="end-music" src="assets/ending_theme.wav" preload="auto"></audio>
+
+<script type="module">
+import { supabase } from './js/supabase-client.js'
+
+const params = new URLSearchParams(location.search)
+const slug = params.get('slug')
+if (!slug) alert('No event slug. Open from dashboard.')
+
+let lastFlash = null
+let lastRevealedKey = null
+let _lastAnswerKey = null
+let sessionId = null
+
+async function init() {
+  const { data: ev } = await supabase.from('events').select('*').eq('slug', slug).single()
+  if (!ev) { document.getElementById('disp-question').textContent = 'Event not found.'; return }
+
+  document.getElementById('show-title').textContent = ev.name || 'FEUDBOX'
+
+  const { data: gs } = await supabase.from('game_sessions').select('*').eq('event_id', ev.id).single()
+  if (!gs) return
+  sessionId = gs.id
+
+  renderBoard(gs.state)
+
+  // Supabase Realtime subscription
+  supabase.channel('game-' + sessionId)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'game_sessions',
+      filter: `id=eq.${sessionId}`
+    }, payload => {
+      renderBoard(payload.new.state)
+    })
+    .subscribe()
+}
+
+function stopAllMusic() {
+  ['bg-music','win-music','introA-music','introB-music','heart-music','end-music'].forEach(id => {
+    const m = document.getElementById(id)
+    if (m) { m.pause(); m.currentTime = 0; m.volume = 1; }
+  })
+}
+
+function renderBoard(state) {
+  if (!state) return
+  document.getElementById('disp-t1name').textContent = state.team1?.name || 'Team 1'
+  document.getElementById('disp-t2name').textContent = state.team2?.name || 'Team 2'
+  document.getElementById('disp-t1score').textContent = state.team1?.score ?? 0
+  document.getElementById('disp-t2score').textContent = state.team2?.score ?? 0
+  document.getElementById('disp-rpts').textContent = state.roundPts ?? 0
+
+  if (state.question) document.getElementById('disp-question').textContent = state.question
+
+  if (state.revealed) {
+    const revealedKey = state.revealed.join(',')
+    if (lastRevealedKey !== null && revealedKey !== lastRevealedKey) {
+      stopAllMusic()
+      const chime = document.getElementById('chime-sound')
+      if (chime) { chime.currentTime = 0; chime.play().catch(() => {}) }
+    }
+    lastRevealedKey = revealedKey
+  }
+
+  if (state.flash && JSON.stringify(state.flash) !== JSON.stringify(lastFlash)) {
+    lastFlash = state.flash
+    const f = state.flash
+
+    if (f.type === 'strike') {
+      const s = document.getElementById('strike-sound')
+      if (s) { s.currentTime = 0; s.play().catch(() => {}) }
+      triggerStrikeFlash(state.strikes === 3)
+    } else if (f.type === 'score') {
+      flashTeam(f.team)
+    } else if (f.type === 'play_music') {
+      stopAllMusic()
+      const track = document.getElementById(f.track + '-music')
+      if (track) { track.currentTime = 0; track.play().catch(() => {}) }
+    } else if (f.type === 'stop_music') {
+      fadeOutAll()
+    }
+  }
+
+  renderTiles(state)
+}
+
+function renderTiles(state) {
+  const left = document.getElementById('col-left')
+  const right = document.getElementById('col-right')
+  if (!state.answers || state.answers.length === 0) {
+    left.innerHTML = '<div style="padding:40px;color:#444;">Ready</div>'
+    right.innerHTML = ''
+    _lastAnswerKey = null
+    return
+  }
+
+  const answerKey = state.answers.map(a => a.text + a.pts).join('|')
+  if (answerKey !== _lastAnswerKey) {
+    _lastAnswerKey = answerKey
+    left.innerHTML = ''
+    right.innerHTML = ''
+    state.answers.forEach((a, i) => {
+      const tile = document.createElement('div')
+      tile.className = 'tile'
+      tile.id = 'tile-' + i
+      tile.innerHTML = `<div class="tile-inner">
+        <div class="tile-front"><span class="tile-number">${i+1}</span><span class="tile-hidden-num">${i+1}</span></div>
+        <div class="tile-back"><span class="tile-answer">${a.text}</span><span class="tile-pts">${a.pts}</span></div>
+      </div>`
+      if (i < 4) left.appendChild(tile); else right.appendChild(tile)
+    })
+    const sb = document.createElement('div')
+    sb.id = 'strikes-box'; sb.className = 'strikes-box'
+    right.appendChild(sb)
+  }
+
+  state.answers.forEach((_, i) => {
+    const tile = document.getElementById('tile-' + i)
+    if (tile) tile.classList.toggle('revealed', !!state.revealed[i])
+  })
+
+  const sb = document.getElementById('strikes-box')
+  if (sb) {
+    sb.innerHTML = `<div class="strikes-circles">
+      <div class="s-circle${state.strikes >= 1 ? ' active' : ''}">✕</div>
+      <div class="s-circle${state.strikes >= 2 ? ' active' : ''}">✕</div>
+      <div class="s-circle${state.strikes >= 3 ? ' active' : ''}">✕</div>
+    </div>`
+  }
+}
+
+function triggerStrikeFlash(isThree) {
+  const overlay = document.getElementById('overlay')
+  const content = document.getElementById('overlay-content')
+  overlay.className = 'overlay'
+  void overlay.offsetWidth
+  content.innerHTML = isThree
+    ? '<div style="color:var(--red);font-size:80px;text-align:center;background:black;padding:40px;border:5px solid var(--gold);">3 STRIKES!<br><span style="color:white;font-size:40px;">STEAL OPPORTUNITY</span></div>'
+    : '<span class="overlay-x">✕</span>'
+  overlay.classList.add('show')
+}
+
+function flashTeam(team) {
+  const el = document.getElementById('t' + team + 'panel')
+  el.classList.remove('flash-score')
+  void el.offsetWidth
+  el.classList.add('flash-score')
+}
+
+function fadeOutAll() {
+  const tracks = ['bg-music','win-music','introA-music','introB-music','heart-music','end-music']
+  tracks.forEach(id => {
+    const audio = document.getElementById(id)
+    if (audio && !audio.paused) {
+      const step = audio.volume / (3000 / 50)
+      const fade = setInterval(() => {
+        if (audio.volume > step) { audio.volume -= step }
+        else { audio.volume = 0; audio.pause(); audio.currentTime = 0; audio.volume = 1; clearInterval(fade) }
+      }, 50)
+    }
+  })
+}
+
+init()
+</script>
+</body>
+</html>
