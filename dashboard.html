@@ -150,8 +150,8 @@ async function loadEvents() {
       <div class="event-teams">${ev.team1_name} vs ${ev.team2_name}</div>
       <div class="event-slug">feudbox.app/board/${ev.slug}</div>
       <div class="card-actions">
-        <button class="btn btn-gold" onclick="openControl('${ev.slug}')">Control</button>
-        <button class="btn btn-blue" onclick="openBoard('${ev.slug}')">Board</button>
+        <a class="btn btn-gold" href="control.html?slug=${ev.slug}" target="_blank">Control</a>
+        <a class="btn btn-blue" href="board.html?slug=${ev.slug}" target="_blank">Board</a>
         <button class="btn btn-red" onclick="deleteEvent('${ev.id}', event)">Delete</button>
       </div>`
     grid.insertBefore(card, newCard)
