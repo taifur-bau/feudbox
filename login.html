@@ -96,9 +96,12 @@ window.doSignup = async () => {
   const pass = document.getElementById('signup-pass').value
   if (!name || !email || !pass) { showMsg('Fill in all fields.', 'error'); return }
   if (pass.length < 6) { showMsg('Password must be at least 6 characters.', 'error'); return }
-  const { error } = await supabase.auth.signUp({ email, password: pass, options: { data: { name } } })
+  const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { data: { name } } })
   if (error) { showMsg(error.message, 'error'); return }
-  showMsg('Account created! Check your email to confirm.', 'success')
+  if (data.user) {
+    await supabase.from('profiles').upsert({ id: data.user.id, name })
+  }
+  window.location.href = 'dashboard.html'
 }
 
 // Already logged in → go to dashboard
