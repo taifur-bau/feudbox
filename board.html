@@ -157,6 +157,10 @@ async function init() {
   if (!gs) return
   sessionId = gs.id
 
+  // Skip flash effects on initial load
+  lastFlash = gs.state?.flash ?? null
+  lastRevealedKey = gs.state?.revealed?.join(',') ?? null
+
   renderBoard(gs.state)
 
   // Supabase Realtime subscription

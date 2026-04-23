@@ -336,8 +336,6 @@ window.revealAll = () => {
 
 window.addStrike = () => {
   if (state.strikes >= 3) { showMsg('Already 3 strikes!', 'warn'); return }
-  const sound = document.getElementById('strike-sound')
-  if (sound) { sound.currentTime = 0; sound.play().catch(() => {}) }
   state.strikes++
   state.flash = { type: 'strike', count: state.strikes, time: Date.now() }
   state.msg = state.strikes === 3
