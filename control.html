@@ -225,6 +225,9 @@ async function init() {
   if (!ev) { alert('Event not found.'); return }
   document.getElementById('event-name-header').textContent = ev.name
 
+  // Apply custom music
+  applyMusic(ev.music || {})
+
   // Load game session
   const { data: gs } = await supabase.from('game_sessions').select('*').eq('event_id', ev.id).single()
   if (!gs) { alert('Game session not found.'); return }
@@ -238,6 +241,20 @@ async function init() {
 
   buildSetupRows()
   renderUI()
+}
+
+const MUSIC_DEFAULTS = {
+  bg: 'Main Theme', win: 'Victory', introA: 'Intro: Team 1',
+  introB: 'Intro: Team 2', heart: 'Heartbeat', end: 'Ending Theme'
+}
+
+function applyMusic(music) {
+  Object.entries(MUSIC_DEFAULTS).forEach(([key, defaultName]) => {
+    const audio = document.getElementById(key + '-music')
+    if (audio && music[key]?.url) audio.src = music[key].url
+    const btn = document.querySelector(`[onclick="playMusic('${key}')"]`)
+    if (btn) btn.textContent = music[key]?.name || defaultName
+  })
 }
 
 function debounce(fn, ms) {

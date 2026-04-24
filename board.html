@@ -147,6 +147,12 @@ async function init() {
 
   document.getElementById('show-title').textContent = ev.name || 'FEUDBOX'
 
+  // Apply event customizations
+  applyEventStyles(ev)
+  applyTeamLogos(ev)
+  applyOrgLogos(ev.org_logos || [])
+  applyMusic(ev.music || {})
+
   const { data: gs } = await supabase.from('game_sessions').select('*').eq('event_id', ev.id).single()
   if (!gs) return
   sessionId = gs.id
@@ -168,6 +174,46 @@ async function init() {
       renderBoard(payload.new.state)
     })
     .subscribe()
+}
+
+function applyEventStyles(ev) {
+  const existing = document.getElementById('event-styles')
+  if (existing) existing.remove()
+  const style = document.createElement('style')
+  style.id = 'event-styles'
+  style.textContent = `
+    #t1panel { background: ${ev.team1_color || '#0000CD'} !important; }
+    #t2panel { background: ${ev.team2_color || '#000000'} !important; }
+    .tile-front { background: ${ev.tile_hidden_color || '#001560'} !important; }
+    .tile-back { background: ${ev.tile_revealed_color || '#003d15'} !important; }
+  `
+  document.head.appendChild(style)
+}
+
+function applyTeamLogos(ev) {
+  const t1img = document.getElementById('t1logo')
+  const t2img = document.getElementById('t2logo')
+  if (ev.team1_logo_url && t1img) { t1img.src = ev.team1_logo_url; t1img.style.display = 'block' }
+  else if (t1img) t1img.style.display = 'none'
+  if (ev.team2_logo_url && t2img) { t2img.src = ev.team2_logo_url; t2img.style.display = 'block' }
+  else if (t2img) t2img.style.display = 'none'
+}
+
+function applyOrgLogos(logos) {
+  const footer = document.getElementById('donor-footer')
+  if (!logos || logos.length === 0) { footer.style.display = 'none'; return }
+  footer.style.display = 'flex'
+  footer.innerHTML = logos.map(url => `<img src="${url}" class="donor-logo" alt="logo">`).join('')
+}
+
+function applyMusic(music) {
+  const map = { bg: 'bg-music', win: 'win-music', introA: 'introA-music', introB: 'introB-music', heart: 'heart-music', end: 'end-music' }
+  Object.entries(map).forEach(([key, id]) => {
+    if (music[key]?.url) {
+      const audio = document.getElementById(id)
+      if (audio) audio.src = music[key].url
+    }
+  })
 }
 
 function stopAllMusic() {
