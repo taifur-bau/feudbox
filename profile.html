@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FeudBox — Profile & Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #f5c518; --gold-dark: #c49b10;
+    --bg: #0e0800; --surface: #1e1200; --surface2: #2a1a00;
+    --red: #c0392b; --green: #27ae60; --blue: #1a6faf;
+    --text: #f0e6cc; --muted: #8a7a5a; --border: #3a2800;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Source Sans 3', sans-serif; min-height: 100vh; }
+  header { background: var(--surface); border-bottom: 2px solid var(--gold); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Oswald', sans-serif; font-size: 24px; color: var(--gold); letter-spacing: 3px; text-decoration: none; }
+  .back-btn { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; transition: all 0.15s; }
+  .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 24px; }
+
+  .page-title { font-family: 'Oswald', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: 'Oswald', sans-serif; font-size: 14px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+  .card-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* AVATAR */
+  .avatar-row { display: flex; align-items: center; gap: 20px; }
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+  .avatar-img { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .avatar-img img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-placeholder { font-family: 'Oswald', sans-serif; font-size: 36px; color: var(--gold); }
+  .avatar-edit-btn { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; background: var(--gold); border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; overflow: hidden; }
+  .avatar-edit-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+  .avatar-info { flex: 1; }
+  .avatar-name { font-family: 'Oswald', sans-serif; font-size: 20px; color: var(--text); }
+  .avatar-org { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .avatar-plan { display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--gold); font-size: 11px; font-family: 'Oswald', sans-serif; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+
+  /* FORM */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  input[type=text], input[type=email], input[type=password] {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 10px 12px; font-size: 14px; outline: none;
+    font-family: 'Source Sans 3', sans-serif; width: 100%; }
+  input:focus { border-color: var(--gold); }
+  input[readonly] { opacity: 0.5; cursor: not-allowed; }
+
+  /* SPONSOR LOGOS */
+  .sponsor-grid { display: flex; flex-wrap: wrap; gap: 10px; min-height: 20px; }
+  .sponsor-item { position: relative; width: 64px; height: 64px; }
+  .sponsor-item img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background: #fff; padding: 4px; }
+  .sponsor-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: var(--red); border-radius: 50%; border: none; color: #fff; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .upload-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .upload-status { font-size: 11px; color: var(--green); min-height: 14px; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 16px; font-size: 13px; border-radius: 7px; cursor: pointer; border: none; font-family: 'Source Sans 3', sans-serif; font-weight: 600; transition: all 0.15s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-gold { background: var(--gold); color: #1a0800; } .btn-gold:hover { background: var(--gold-dark); }
+  .btn-gray { background: #2a2a2a; color: #ccc; } .btn-gray:hover { background: #333; }
+  .btn-red { background: transparent; border: 1px solid var(--red); color: var(--red); } .btn-red:hover { background: var(--red); color: #fff; }
+  .btn-blue { background: var(--blue); color: #fff; } .btn-blue:hover { background: #155a8a; }
+  .upload-btn { position: relative; overflow: hidden; cursor: pointer; display: inline-flex; align-items: center; }
+  .upload-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+
+  .save-row { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
+  .save-msg { font-size: 12px; flex: 1; }
+  .save-msg.success { color: var(--green); }
+  .save-msg.error { color: #ff6b6b; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="dashboard.html">FEUDBOX</a>
+  <a class="back-btn" href="dashboard.html">← Dashboard</a>
+</header>
+
+<main>
+  <div class="page-title">Profile & Settings</div>
+
+  <!-- PROFILE CARD -->
+  <div class="card">
+    <div class="card-header">My Profile</div>
+    <div class="card-body">
+
+      <div class="avatar-row">
+        <div class="avatar-wrap">
+          <div class="avatar-img" id="avatar-display">
+            <span class="avatar-placeholder" id="avatar-initial">?</span>
+          </div>
+          <button class="avatar-edit-btn" title="Change photo">
+            ✏️
+            <input type="file" accept="image/*" onchange="uploadAvatar(this)">
+          </button>
+        </div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="profile-display-name">Loading...</div>
+          <div class="avatar-org" id="profile-display-org"></div>
+          <div class="avatar-plan">FREE PLAN</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="field-name" placeholder="Your name"/>
+        </div>
+        <div class="field">
+          <label>Organization</label>
+          <input type="text" id="field-org" placeholder="e.g. FAO, WHO, Company name"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="field-email" readonly/>
+      </div>
+
+      <div class="save-row">
+        <span class="save-msg" id="profile-msg"></span>
+        <button class="btn btn-gold" onclick="saveProfile()">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPONSOR LOGOS CARD -->
+  <div class="card">
+    <div class="card-header">Default Sponsor Logos <span style="font-size:10px;color:var(--muted);font-family:sans-serif;font-weight:400;text-transform:none;letter-spacing:0"> — shown in game board footer</span></div>
+    <div class="card-body">
+      <div class="sponsor-grid" id="sponsor-grid"></div>
+      <div class="upload-area">
+        <label class="btn btn-blue upload-btn">
+          + Add Logo(s)
+          <input type="file" accept="image/*" multiple onchange="uploadSponsorLogos(this)">
+        </label>
+        <span class="upload-status" id="sponsor-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT SETTINGS CARD -->
+  <div class="card" id="settings">
+    <div class="card-header">Account Settings</div>
+    <div class="card-body">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Change Password</div>
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" id="field-newpass" placeholder="min 6 characters"/>
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" id="field-confirmpass" placeholder="repeat new password"/>
+      </div>
+      <div class="save-row">
+        <span class="save-msg" id="password-msg"></span>
+        <button class="btn btn-gray" onclick="changePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module">
+import { supabase } from './js/supabase-client.js'
+
+const BUCKET = 'avatars'
+let currentUser = null
+let profile = null
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) { window.location.href = 'login.html'; return }
+  currentUser = session.user
+
+  const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single()
+  profile = data || {}
+
+  document.getElementById('field-email').value = currentUser.email
+  document.getElementById('field-name').value = profile.name || ''
+  document.getElementById('field-org').value = profile.organization || ''
+
+  updateAvatarDisplay()
+  renderSponsorLogos(profile.sponsor_logos || [])
+
+  if (location.hash === '#settings') {
+    document.getElementById('settings').scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+function updateAvatarDisplay() {
+  const name = profile.name || currentUser.email
+  document.getElementById('profile-display-name').textContent = name
+  document.getElementById('profile-display-org').textContent = profile.organization || ''
+
+  if (profile.avatar_url) {
+    document.getElementById('avatar-display').innerHTML = `<img src="${profile.avatar_url}" alt="avatar">`
+  } else {
+    document.getElementById('avatar-initial').textContent = name.charAt(0).toUpperCase()
+  }
+}
+
+window.uploadAvatar = async (input) => {
+  const file = input.files[0]
+  if (!file) return
+  const ext = file.name.split('.').pop()
+  const path = `${currentUser.id}/avatar.${ext}`
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true })
+  if (error) { showMsg('profile-msg', 'Avatar upload failed: ' + error.message, 'error'); return }
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+  profile.avatar_url = data.publicUrl + '?t=' + Date.now()
+  await supabase.from('profiles').upsert({ id: currentUser.id, avatar_url: profile.avatar_url })
+  updateAvatarDisplay()
+  showMsg('profile-msg', 'Avatar updated!', 'success')
+}
+
+window.saveProfile = async () => {
+  const name = document.getElementById('field-name').value.trim()
+  const organization = document.getElementById('field-org').value.trim()
+  if (!name) { showMsg('profile-msg', 'Name cannot be empty.', 'error'); return }
+  const { error } = await supabase.from('profiles').upsert({ id: currentUser.id, name, organization })
+  if (error) { showMsg('profile-msg', error.message, 'error'); return }
+  profile.name = name
+  profile.organization = organization
+  updateAvatarDisplay()
+  showMsg('profile-msg', 'Profile saved!', 'success')
+}
+
+window.changePassword = async () => {
+  const np = document.getElementById('field-newpass').value
+  const cp = document.getElementById('field-confirmpass').value
+  if (!np) { showMsg('password-msg', 'Enter new password.', 'error'); return }
+  if (np.length < 6) { showMsg('password-msg', 'Min 6 characters.', 'error'); return }
+  if (np !== cp) { showMsg('password-msg', 'Passwords do not match.', 'error'); return }
+  const { error } = await supabase.auth.updateUser({ password: np })
+  if (error) { showMsg('password-msg', error.message, 'error'); return }
+  document.getElementById('field-newpass').value = ''
+  document.getElementById('field-confirmpass').value = ''
+  showMsg('password-msg', 'Password updated!', 'success')
+}
+
+window.uploadSponsorLogos = async (input) => {
+  const files = Array.from(input.files)
+  if (!files.length) return
+  const statusEl = document.getElementById('sponsor-status')
+  statusEl.textContent = 'Uploading...'
+  statusEl.style.color = 'var(--gold)'
+  const current = [...(profile.sponsor_logos || [])]
+  for (const file of files) {
+    const ext = file.name.split('.').pop()
+    const path = `${currentUser.id}/sponsors/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false })
+    if (!error) {
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+      current.push(data.publicUrl)
+    }
+  }
+  await supabase.from('profiles').upsert({ id: currentUser.id, sponsor_logos: current })
+  profile.sponsor_logos = current
+  renderSponsorLogos(current)
+  statusEl.textContent = `✓ ${files.length} logo(s) added`
+  statusEl.style.color = 'var(--green)'
+}
+
+window.removeSponsorLogo = async (url) => {
+  const updated = (profile.sponsor_logos || []).filter(u => u !== url)
+  await supabase.from('profiles').upsert({ id: currentUser.id, sponsor_logos: updated })
+  profile.sponsor_logos = updated
+  renderSponsorLogos(updated)
+}
+
+function renderSponsorLogos(logos) {
+  const grid = document.getElementById('sponsor-grid')
+  grid.innerHTML = ''
+  logos.forEach(url => {
+    const item = document.createElement('div')
+    item.className = 'sponsor-item'
+    item.innerHTML = `<img src="${url}" alt="logo"><button class="sponsor-remove" onclick="removeSponsorLogo('${url}')">✕</button>`
+    grid.appendChild(item)
+  })
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id)
+  el.textContent = text
+  el.className = 'save-msg ' + type
+  setTimeout(() => { el.textContent = ''; el.className = 'save-msg'; }, 3000)
+}
+
+init()
+</script>
+</body>
+</html>
